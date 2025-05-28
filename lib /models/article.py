@@ -72,4 +72,17 @@ class Article:
         rows = cursor.fetchall()
         conn.close()
         return [cls(row["title"], row["author_id"], row["magazine_id"], row["id"]) for row in rows]
+    
+    def author(self):
+
+        from lib.models.author import Author
+
+        return Author.find_by_id(self.author_id)
+
+    def magazine(self):
+        
+        from lib.models.magazine import Magazine
+
+        return Magazine.find_by_id(self.magazine_id)
+
           
