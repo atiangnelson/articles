@@ -7,3 +7,24 @@ class Magazine:
         self.name = name  
         self.category = category  
 
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        if not isinstance(value, str) or value == "":
+            raise ValueError("Magazine name must be a non-empty string.")
+        self._name = value
+
+    @property
+    def category(self):
+        return self._category
+
+    @category.setter
+    def category(self, value):
+        if not isinstance(value, str) or value == "":
+            raise ValueError("Magazine category must be a non-empty string.")
+        self._category = value
+    
+
