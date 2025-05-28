@@ -1,4 +1,4 @@
-from lib.db.connection import get_connection
+from .connection import get_connection
 
 class Author:
     def __init__(self, name, id=None):
@@ -49,9 +49,18 @@ class Author:
         conn.close()
         return cls(row["name"], row["id"]) if row else None
     
+    @classmethod
+    def all(cls):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM authors")
+        rows = cursor.fetchall()
+        conn.close()
+        return [cls(row["name"], row["id"]) for row in rows]
+    
 
     def articles(self):
-        from lib.models.article import Article
+        from .article import Article
 
         return Article.find_by_author(self.id)
 
@@ -59,14 +68,14 @@ class Author:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT DISTINCT * FROM magazines 
+            SELECT DISTINCT magazines.id, magazines.name, magazines.category FROM magazines 
             JOIN articles a ON magazines.id = articles.magazine_id
             WHERE a.author_id = ?
         """, (self.id,))
         rows = cursor.fetchall()
         conn.close()
 
-        from lib.models.magazine import Magazine
+        from .magazine import Magazine
 
         return [Magazine(row["name"], row["category"], row["id"]) for row in rows]
 
