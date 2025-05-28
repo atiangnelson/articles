@@ -18,4 +18,24 @@ class Author:
 
         conn.commit()
         conn.close()
+
+
+    @classmethod
+    def find_by_id(cls, author_id):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM authors WHERE id = ?", (author_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return cls(row["name"], row["id"]) if row else None
     
+    @classmethod
+    def find_by_name(cls, name):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM authors WHERE name = ?", (name,))
+        row = cursor.fetchone()
+        conn.close()
+        return cls(row["name"], row["id"]) if row else None
+
+ 
