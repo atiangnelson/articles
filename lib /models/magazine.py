@@ -46,55 +46,53 @@ class Magazine:
         conn.commit()
         conn.close()
 
-@classmethod
-def find_by_id(cls, magazine_id):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM magazines WHERE id = ?", (magazine_id,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        return cls(row["name"], row["category"], row["id"])
-    return None
+    @classmethod
+    def find_by_id(cls, magazine_id):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM magazines WHERE id = ?", (magazine_id,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return cls(row["name"], row["category"], row["id"])
+        return None
 
-@classmethod
-def find_by_name(cls, name):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM magazines WHERE name = ?", (name,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        return cls(row["name"], row["category"], row["id"])
-    return None
+    @classmethod
+    def find_by_name(cls, name):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM magazines WHERE name = ?", (name,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return cls(row["name"], row["category"], row["id"])
+        return None
 
-@classmethod
-def find_by_category(cls, category):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM magazines WHERE category = ?", (category,))
-    rows = cursor.fetchall()
-    conn.close()
-    return [cls(row["name"], row["category"], row["id"]) for row in rows]
+    @classmethod
+    def find_by_category(cls, category):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM magazines WHERE category = ?", (category,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [cls(row["name"], row["category"], row["id"]) for row in rows]
 
-def articles(self):
+    def articles(self):
+        from lib.models.article import Article
+        return Article.find_by_magazine(self.id)
 
-    from lib.models.article import Article
+    def authors(self):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT authors.id, authors.name
+            FROM authors
+            JOIN articles ON authors.id = articles.author_id
+            WHERE articles.magazine_id = ?
+        """, (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
 
-    return Article.find_by_magazine(self.id)
+        from lib.models.author import Author
 
-def authors(self):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT DISTINCT authors.id, authors.name
-        FROM authors
-        JOIN articles ON authors.id = articles.author_id
-        WHERE articles.magazine_id = ?
-    """, (self.id,))
-    rows = cursor.fetchall()
-    conn.close()
-
-    from lib.models.author import Author
-    
-    return [Author(row["name"], row["id"]) for row in rows]
+        return [Author(row["name"], row["id"]) for row in rows]
