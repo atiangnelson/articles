@@ -35,4 +35,41 @@ class Article:
             )
 
         conn.commit()
-        conn.close()      
+        conn.close()
+
+    @classmethod
+    def find_by_id(cls, article_id):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM articles WHERE id = ?", (article_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return cls(row["title"], row["author_id"], row["magazine_id"], row["id"]) if row else None
+
+    @classmethod
+    def find_by_title(cls, title):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM articles WHERE title = ?", (title,))
+        row = cursor.fetchone()
+        conn.close()
+        return cls(row["title"], row["author_id"], row["magazine_id"], row["id"]) if row else None
+
+    @classmethod
+    def find_by_author(cls, author_id):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM articles WHERE author_id = ?", (author_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [cls(row["title"], row["author_id"], row["magazine_id"], row["id"]) for row in rows]
+
+    @classmethod
+    def find_by_magazine(cls, magazine_id):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM articles WHERE magazine_id = ?", (magazine_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [cls(row["title"], row["author_id"], row["magazine_id"], row["id"]) for row in rows]
+          
