@@ -1,9 +1,20 @@
 from lib.db.connection import get_connection
 
 class Author:
-    def __init__(self,name,id=None):
-        self.id=id
-        self.name=name
+    def __init__(self, name, id=None):
+        self.id = id
+        self.name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        if not isinstance(value, str) or value == "":
+            raise ValueError("Author name must be a non-empty string.")
+        self._name = value  
+
 
     
     def save(self):
@@ -37,5 +48,27 @@ class Author:
         row = cursor.fetchone()
         conn.close()
         return cls(row["name"], row["id"]) if row else None
+    
+
+    def articles(self):
+        from lib.models.article import Article
+
+        return Article.find_by_author(self.id)
+
+    def magazines(self):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT * FROM magazines 
+            JOIN articles a ON magazines.id = articles.magazine_id
+            WHERE a.author_id = ?
+        """, (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        from lib.models.magazine import Magazine
+
+        return [Magazine(row["name"], row["category"], row["id"]) for row in rows]
+
 
  
