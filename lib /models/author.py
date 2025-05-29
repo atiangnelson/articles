@@ -60,7 +60,7 @@ class Author:
     
 
     def articles(self):
-        
+
         from lib.models.article import Article
 
         conn = get_connection()
@@ -90,5 +90,24 @@ class Author:
 
         return [Magazine(row["name"], row["category"], row["id"]) for row in rows]
 
+    @classmethod
+    def top_author(cls):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT authors.id, authors.name, COUNT(articles.id) AS article_count
+            FROM authors
+            JOIN articles ON authors.id = articles.author_id
+            GROUP BY authors.id
+            ORDER BY article_count DESC
+            LIMIT 1
+        """)
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            author = cls(row["name"], row["id"])
+            author.article_count = row["article_count"] 
+            return author
+        return None
 
  
