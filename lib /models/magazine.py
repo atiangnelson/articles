@@ -96,3 +96,19 @@ class Magazine:
         from lib.models.author import Author
 
         return [Author(row["name"], row["id"]) for row in rows]
+
+    @classmethod
+    def with_multiple_authors(cls):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT magazines.id, magazines.name, magazines.category
+            FROM magazines
+            JOIN articles ON magazines.id = articles.magazine_id
+            GROUP BY magazines.id
+            HAVING COUNT(DISTINCT articles.author_id) >= 2
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+
+        return [cls(row["name"], row["category"], row["id"]) for row in rows]

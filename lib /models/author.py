@@ -1,4 +1,4 @@
-from .connection import get_connection
+from lib.db.connection import get_connection
 
 class Author:
     def __init__(self, name, id=None):
@@ -60,9 +60,20 @@ class Author:
     
 
     def articles(self):
-        from .article import Article
+        
+        from lib.models.article import Article
 
-        return Article.find_by_author(self.id)
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM articles WHERE author_id = ?
+        """, (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [Article(row["title"], row["author_id"], row["magazine_id"], row["id"]) for row in rows]
+
+
+        
 
     def magazines(self):
         conn = get_connection()
@@ -75,7 +86,7 @@ class Author:
         rows = cursor.fetchall()
         conn.close()
 
-        from .magazine import Magazine
+        from lib.models.magazine import Magazine
 
         return [Magazine(row["name"], row["category"], row["id"]) for row in rows]
 
