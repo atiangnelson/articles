@@ -112,3 +112,26 @@ class Magazine:
         conn.close()
 
         return [cls(row["name"], row["category"], row["id"]) for row in rows]
+
+@classmethod
+def article_counts(cls):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT magazines.id, magazines.name, magazines.category, COUNT(articles.id) AS article_count
+        FROM magazines
+        LEFT JOIN articles ON magazines.id = articles.magazine_id
+        GROUP BY magazines.id
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "category": row["category"],
+            "article_count": row["article_count"],
+        }
+        for row in rows
+    ]
