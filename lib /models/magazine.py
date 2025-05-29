@@ -96,6 +96,34 @@ class Magazine:
         from lib.models.author import Author
 
         return [Author(row["name"], row["id"]) for row in rows]
+    
+
+    def article_titles(self):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT title FROM articles WHERE magazine_id = ?
+        """, (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [row["title"] for row in rows]
+
+    def contributing_authors(self):
+        from lib.models.author import Author
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT authors.id, authors.name, COUNT(articles.id) as article_count
+            FROM authors
+            JOIN articles ON authors.id = articles.author_id
+            WHERE articles.magazine_id = ?
+            GROUP BY authors.id
+            HAVING article_count > 2
+        """, (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [Author(row["name"], row["id"]) for row in rows]
+
 
     @classmethod
     def with_multiple_authors(cls):
@@ -113,25 +141,25 @@ class Magazine:
 
         return [cls(row["name"], row["category"], row["id"]) for row in rows]
 
-@classmethod
-def article_counts(cls):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT magazines.id, magazines.name, magazines.category, COUNT(articles.id) AS article_count
-        FROM magazines
-        LEFT JOIN articles ON magazines.id = articles.magazine_id
-        GROUP BY magazines.id
-    """)
-    rows = cursor.fetchall()
-    conn.close()
+    @classmethod
+    def article_counts(cls):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT magazines.id, magazines.name, magazines.category, COUNT(articles.id) AS article_count
+            FROM magazines
+            LEFT JOIN articles ON magazines.id = articles.magazine_id
+            GROUP BY magazines.id
+        """)
+        rows = cursor.fetchall()
+        conn.close()
 
-    return [
-        {
-            "id": row["id"],
-            "name": row["name"],
-            "category": row["category"],
-            "article_count": row["article_count"],
-        }
-        for row in rows
-    ]
+        return [
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "category": row["category"],
+                "article_count": row["article_count"],
+            }
+            for row in rows
+        ]
