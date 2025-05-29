@@ -110,4 +110,28 @@ class Author:
             return author
         return None
 
+    def add_article(self, magazine, title):
+        
+        from lib.models.article import Article
+        from lib.models.magazine import Magazine
+
+        if not isinstance(magazine, Magazine):
+            raise ValueError("magazine must be a Magazine instance")
+
+        article = Article(title=title, author_id=self.id, magazine_id=magazine.id)
+        article.save()
+        return article
+
+    def topic_areas(self):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT magazines.category
+            FROM magazines
+            JOIN articles ON magazines.id = articles.magazine_id
+            WHERE articles.author_id = ?
+        """, (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [row["category"] for row in rows]
  
